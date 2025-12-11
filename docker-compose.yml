@@ -1,0 +1,13 @@
+# Snippet for your docker-compose.yml
+services:
+  # Your main FastAPI app goes here
+  redis:
+    image: redis:7-alpine
+    container_name: stock_redis
+    ports:
+      - "6380:6379"  # Maps the container port to your local machine
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
