@@ -7,7 +7,9 @@
   font-family: Inter,sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  
+  overflow-x: hidden;
+  width: 100%;
+
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
@@ -25,10 +27,10 @@
   --popover-foreground: oklch(0.129 0.042 264.695);
   --primary: oklch(0.208 0.042 265.755);
   --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
+  --secondary: oklch(96.826% 0.00696 248.26);
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
+  --muted-foreground: oklch(55.417% 0.04605 257.553 / 0.884);
   --accent: oklch(0.968 0.007 247.896);
   --accent-foreground: oklch(0.208 0.042 265.755);
   --destructive: oklch(0.577 0.245 27.325);
@@ -50,58 +52,85 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+/* a { */
+  /* font-weight: 500; */
+  /* color: #646cff; */
+  /* text-decoration: inherit; */
+/* } */
+/* a:hover { */
+  /* color: #535bf2; */
+/* } */
 
 body {
   margin: 0;
   display: flex-wrap;
-  /* place-items: center; This is why I hate AI */ 
-  min-width: 320px;
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  font-family: inherit;
-  background-color: inherit;
-  color: inherit;
-
+.gradient-bg {
+  min-height: 100vh;
+  background: linear-gradient(
+    270deg,
+    #eef3fa,
+    #c5d3e6,
+    #e3e9fc,
+    #e4f9f6
+  );
+  background-size: 600% 600%;
+  animation: gradientFlow 12s ease infinite;
 }
 
-button {
+.dark .gradient-bg {
+  min-height: 100vh;
+  background: linear-gradient(
+    270deg,
+    #020617,  /* near-black slate */
+    #2d3341,  /* slate-900 */
+    #05103c,
+    #043433   /* deep teal */
+  );
+  background-size: 600% 600%;
+  animation: gradientFlow 14s ease infinite;
+}
+
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+a[type="button"] {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 550;
   font-family: inherit;
-  /* background-color: inherit; */
-  /* color: inherit; */
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
+a[type="button"]:hover {
   border-color: #646cff;
 }
 
 .dark .tab-hover-gradient:hover {
-  @apply text-stone-300 bg-clip-border;
+  @apply text-stone-300 bg-clip-border bg-none bg-slate-800;
 }
 
 .tab-hover-gradient:hover {
-  @apply text-white bg-clip-border;
+  @apply text-black bg-clip-border bg-none bg-slate-200;
 }
 
 .tab-hover-gradient {
-  @apply text-transparent font-bold bg-clip-text bg-linear-to-r/oklab from-indigo-300 to-teal-700;
+  @apply relative inline-flex items-center justify-center
+         text-transparent font-black
+         bg-clip-text bg-linear-to-r/oklab from-indigo-300 to-teal-700;
+}
+
+.tab-hover-gradient::before {
+  content: "";
+  @apply absolute inset-0 bg-secondary rounded-md;
+  z-index: -1;
 }
 
 button:focus,
@@ -162,7 +191,7 @@ button:focus-visible {
 
 .dark {
   --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
+  --foreground: oklch(98.415% 0.00352 248.585 / 0.801);
   --card: oklch(0.208 0.042 265.755);
   --card-foreground: oklch(0.984 0.003 247.858);
   --popover: oklch(0.208 0.042 265.755);
@@ -172,7 +201,7 @@ button:focus-visible {
   --secondary: oklch(0.279 0.041 260.031);
   --secondary-foreground: oklch(0.984 0.003 247.858);
   --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
+  --muted-foreground: oklch(70.382% 0.04025 257.029 / 0.653);
   --accent: oklch(0.279 0.041 260.031);
   --accent-foreground: oklch(0.984 0.003 247.858);
   --destructive: oklch(0.704 0.191 22.216);

@@ -1,27 +1,35 @@
 import { useEffect, useState } from "react";
-import { Sun, Moon } from "lucide-react"; // optional icons
+import { Sun, Moon } from "lucide-react";
 
 export default function DarkModeToggle() {
-  const [dark, setDark] = useState(
-    () => document.documentElement.classList.contains("dark")
-  );
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+      setDark(true);
+    } else {
+      document.documentElement.classList.remove("dark");
+      setDark(false);
+    }
+  }, []);
 
   const toggleDarkMode = () => {
     const html = document.documentElement;
-    html.classList.toggle("dark");
-    setDark(html.classList.contains("dark"));
-    localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
-  };
+    const isDark = !html.classList.contains("dark");
 
-  useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    if (saved === "dark") document.documentElement.classList.add("dark");
-  }, []);
+    html.classList.toggle("dark", isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    setDark(isDark);
+  };
 
   return (
     <button
       onClick={toggleDarkMode}
-      className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+      className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+      aria-label="Toggle dark mode"
     >
       {dark ? <Sun size={20} /> : <Moon size={20} />}
     </button>
