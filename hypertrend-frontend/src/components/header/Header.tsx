@@ -1,13 +1,22 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Bell, Search, Menu } from "lucide-react"
+import { Bell, Search, Menu, Plus } from "lucide-react"
 import DarkModeToggle from "@/components/ui/darkmode"
 import { Link, useLocation } from 'react-router-dom';
+import { ProfileDropdown } from "@/components/header/Profile-Dropdown"
+import { Button } from "@/components/ui/button"
+import { AddHoldingModal } from "@/components/modals/Add-Stock-Holding"
+import { useState } from "react"
+
 
 const tabsData = ["overview", "analytics", "watchlist", "market"];
 
-export default function Header({ onMenuClick }) {
+interface HeaderProps {
+  onMenuClick: () => void;
+}
+export default function Header({ onMenuClick }: HeaderProps) {
+  const [open, setOpen] = useState(false)
+
   const location = useLocation();
   const currentTab = location.pathname.slice(1) || 'overview';
 
@@ -62,6 +71,17 @@ export default function Header({ onMenuClick }) {
                 placeholder="Search..."
                 className="hidden md:block w-64"
               />
+              <Button
+                onClick={() => setOpen(true)}
+                className="gap-2 p-2 rounded-full md:bg-slate-100 bg-transparent md:dark:bg-slate-800 md:border hover:bg-gray-200 dark:hover:bg-gray-700"
+              >
+                <Plus className="resize-30 text-primary" />
+                <p className="md:flex hidden text-primary">Add Stock</p>
+              </Button>
+              <AddHoldingModal
+                open={open}
+                onOpenChange={setOpen}
+              />
 
               <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
                 <Bell size={20} className="text-gray-700 dark:text-gray-100" />
@@ -69,10 +89,7 @@ export default function Header({ onMenuClick }) {
 
               <DarkModeToggle />
 
-              <Avatar className="cursor-pointer p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                <AvatarImage src="/avatar.png" />
-                <AvatarFallback>SS</AvatarFallback>
-              </Avatar>
+              <ProfileDropdown />
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
-import { ChartAreaGradient } from "@/components/Gradient-Chart"
-import { ChartRadarLinesOnly } from "@/components/Radar-Chart"
-import { StatCard } from "@/components/Stat-Card"
-import { Table } from "@/components/Holding-Tables"
+import { ChartAreaGradient } from "@/components/cards/Gradient-Chart"
+import { ChartRadarLinesOnly } from "@/components/charts/Radar-Chart"
+import { StatCard } from "@/components/charts/Stat-Card"
+import { Table } from "@/components/tables/Holding-Tables"
 import {
   TrendingUp, Wallet,
   ArrowUpDown, LineChart,
@@ -129,7 +129,6 @@ export default function Dasboard() {
           />
         </div>
         <Table />
-
       </div>
   );
 }
