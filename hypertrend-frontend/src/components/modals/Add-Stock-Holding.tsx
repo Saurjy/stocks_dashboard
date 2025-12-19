@@ -7,16 +7,9 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
-
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
+import { DialogClose } from "@/components/ui/dialog"
+import { CalendarInput } from "../calendar/Calendar-With-Input"
 
 type AddHoldingModalProps = {
   open: boolean
@@ -27,7 +20,6 @@ export function AddHoldingModal({
   open,
   onOpenChange,
 }: AddHoldingModalProps) {
-  const [date, setDate] = useState<Date | undefined>()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
@@ -59,29 +51,7 @@ export function AddHoldingModal({
           </div>
 
           {/* Date Picker */}
-          <div className="space-y-1">
-            <Label>Dated On</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-
-              <PopoverContent className="p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+          <CalendarInput/>
 
           {/* Investment Value */}
           <div className="space-y-1">
@@ -97,10 +67,12 @@ export function AddHoldingModal({
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" type="button">
-              Cancel
-            </Button>
-            <Button type="submit">
+            <DialogClose asChild>
+              <Button variant="outline" type="button">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="submit" variant="outline" >
               Save Holding
             </Button>
           </div>
