@@ -9,31 +9,73 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-function formatDate(date: Date | undefined) {
+interface CalendarInputProps {
+  date?: Date | null;
+  setDate: (date: Date | undefined) => void;
+  onError?: (errorMessage: string | null) => void;
+}
+function formatDate(date: Date | undefined | null) {
   if (!date) {
     return ""
   }
-  return date.toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  })
+  const offset = date.getTimezoneOffset()
+  const localDate = new Date(date.getTime() - (offset * 60 * 1000))
+  return localDate.toISOString().split('T')[0]
 }
-function isValidDate(date: Date | undefined) {
-  if (!date) {
-    return false
+function isValidDate(dateStr: string | undefined): string | null {
+  if (!dateStr) return "Date is required";
+
+  const regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+  if (!regex.test(dateStr)) {
+    return "Format must be YYYY-MM-DD";
   }
-  return !isNaN(date.getTime())
+
+  const inputDate = new Date(dateStr);
+  if (isNaN(inputDate.getTime())) {
+    return "Invalid calendar date";
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); 
+
+  const comparisonDate = new Date(inputDate);
+  comparisonDate.setHours(0, 0, 0, 0);
+
+  if (comparisonDate > today) {
+    return "Date cannot be in the future";
+  }
+  
+  if (comparisonDate < new Date("1900-01-01")) {
+    return "Date is too far in the past";
+  }
+
+  return null;
 }
-export function CalendarInput() {
+//TODO: Fix When Clicking in the calender disabled dates throws error 
+export function CalendarInput({ date, setDate, onError }: CalendarInputProps) {
   const [open, setOpen] = React.useState(false)
-  const [date, setDate] = React.useState<Date | undefined>(
-    new Date()
-  )
-  const [month, setMonth] = React.useState<Date | undefined>(date)
+  const [month, setMonth] = React.useState<Date | undefined | null>(date)
   const [value, setValue] = React.useState(formatDate(date))
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setValue(val);
+
+    const error = isValidDate(val);
+
+    if (onError) onError(error);
+
+    if (!error) {
+      const parsedDate = new Date(val);
+      setDate(parsedDate);
+      setMonth(parsedDate);
+    } else {
+      onError?.(error);
+      setDate(undefined);
+    }
+  };
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-1">
       <Label htmlFor="date" className="px-1">
         Dated On
       </Label>
@@ -43,14 +85,7 @@ export function CalendarInput() {
           value={value}
           placeholder={formatDate(new Date())}
           className="bg-background pr-10"
-          onChange={(e) => {
-            const date = new Date(e.target.value)
-            setValue(e.target.value)
-            if (isValidDate(date)) {
-              setDate(date)
-              setMonth(date)
-            }
-          }}
+          onChange={handleTextChange}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
               e.preventDefault()
@@ -77,15 +112,20 @@ export function CalendarInput() {
           >
             <Calendar
               mode="single"
-              selected={date}
+              selected={date ?? undefined}
               captionLayout="dropdown"
-              month={month}
+              month={month ?? undefined}
               onMonthChange={setMonth}
               fixedWeeks
+              disabled={(date) =>
+                date > new Date() || date < new Date("1900-01-01")
+              }
               onSelect={(date) => {
-                setDate(date)
+                if (!date) return;
+                setDate(date = new Date(formatDate(date)))
                 setValue(formatDate(date))
-                setOpen(false)
+                onError?.(null);
+                setOpen(false);
               }}
             />
           </PopoverContent>
