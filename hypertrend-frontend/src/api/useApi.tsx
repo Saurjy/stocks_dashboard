@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const useApi = axios.create({
-  baseURL: 'http://localhost:8000/api', // Replace with your API URL
+  baseURL: 'http://127.0.0.1:8000/api', // Replace with your API URL
   headers: {
     'Content-Type': 'application/json',
   },
@@ -17,3 +17,4 @@ useApi.interceptors.request.use((config) => {
   return config;
 });
 
+export default useApi;

@@ -1,6 +1,6 @@
-import { ChartAreaGradient } from "@/components/cards/Gradient-Chart"
+import { ChartAreaGradient } from "@/components/charts/Gradient-Chart"
 import { ChartRadarLinesOnly } from "@/components/charts/Radar-Chart"
-import { StatCard } from "@/components/charts/Stat-Card"
+import { StatCard } from "@/components/cards/Stat-Card"
 import { Table } from "@/components/tables/Holding-Tables"
 import {
   TrendingUp, Wallet,
@@ -50,7 +50,7 @@ export default function Dasboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-background rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="mb-6">
-            <h1 className="text-foreground mb-2 text-[24px]">
+            <h1 className="text-foreground mb-2 text-[32px]">
               Portfolio Overview
             </h1>
             <p className="text-muted-foreground">
