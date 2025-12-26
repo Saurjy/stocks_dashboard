@@ -5,4 +5,8 @@ export const userService = {
     const response = await useApi.post('/dashboard/user_request/', payload);
     return response.data;
   },
+  fetchMarketData: async () => {
+    const response = await useApi.get('/dashboard/fetch_market_data/');
+    return response.data;
+  },
 };

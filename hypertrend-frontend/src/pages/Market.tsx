@@ -1,8 +1,11 @@
 import { StatCard } from "@/components/cards/Stat-Card"
 import { GraphCard } from "@/components/cards/Graph-Card"
 import { MarketCard } from "@/components/cards/Market-Card"
-import { useState } from "react"
-import { marketData } from "@/assets/static_data"
+import { useState, useEffect } from "react"
+import { userService } from "@/services/useRequestData"
+import { toast } from "sonner"
+
+// import { marketData } from "@/assets/static_data"
 
 import {
   IndianRupee, Activity,
@@ -17,6 +20,9 @@ const ITEMS_PER_PAGE = 8
 
 export default function Market() {
   const [currentPage, setCurrentPage] = useState(1)
+  const [marketData, setMarketData] = useState([])
+  const [loading, setLoading] = useState(true)
+  // const [error, setError] = useState(null)
 
   const totalPages = Math.ceil(marketData.length / ITEMS_PER_PAGE)
 
@@ -24,6 +30,22 @@ export default function Market() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   )
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const data = await userService.fetchMarketData()
+        setMarketData(data)
+      } catch (err) {
+        toast.error(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+
 
   return (
 
@@ -128,26 +150,35 @@ export default function Market() {
             <DropdownSort />
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-6">
-          {currentItems.map((item, index) => (
-            <MarketCard
-              key={index}
-              title={item.title}
-              description={item.description}
-              sector={item.sector}
-              value={item.value}
-              change={item.change}
-              daychange={item.daychange}
-              vol={item.vol}
-              cap={item.cap}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground text-sm">Loading market data...</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-6">
+              {currentItems.map((item, index) => (
+                <MarketCard
+                  key={index}
+                  title={item.title}
+                  description={item.description}
+                  sector={item.sector}
+                  value={item.value}
+                  change={item.change}
+                  daychange={item.daychange}
+                  vol={item.vol}
+                  cap={item.cap}
+                />
+              ))}
+            </div>
+            <InputPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
             />
-          ))}
-        </div>
-        <InputPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+          </>
+        )}
       </div>
     </div>
 
