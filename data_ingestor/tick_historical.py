@@ -12,7 +12,8 @@ This should be run once per symbol to backfill historical data.
 import asyncio
 from datetime import datetime, timezone, timedelta, date
 from typing import List, Dict
-import pandas as pd
+import requests
+from time import sleep
 
 import shared
 from shared import (
@@ -21,12 +22,16 @@ from shared import (
     init_connections,
     close_connections,
     START_DATE,
-    END_DATE
+    END_DATE,
+    PROXIES,
+    FETCH_COOLDOWN_TIME,
+    API_URL,
+    NSESession
 )
 
 # IST timezone offset
 IST = timezone(timedelta(hours=5, minutes=30))
-
+nse_session = NSESession()
 
 # -----------------------------------------------------------
 # LOAD TICKER LIST FROM DATABASE
@@ -83,6 +88,74 @@ async def insert_historical_batch_into_postgres(data: List[Dict]):
 
 
 # -----------------------------------------------------------
+# NORMALIZE HISTORICAL DATA FOR A TICKER
+# -----------------------------------------------------------
+async def normalize_nse_eq_rows(
+    rows: List[Dict],
+    ticker: str,
+    exchange: str = "NSE",
+) -> List[Dict]:
+    """
+    Convert NSE historical EQ API rows into internal tick format.
+
+    :param rows: Raw NSE API rows
+    :param ticker: Trading symbol
+    :param exchange: Exchange name
+    :return: Normalized tick dictionaries
+    """
+
+    normalized = []
+
+    for row in rows:
+        # Parse date (example: '24-Dec-2025')
+        trade_date = datetime.strptime(
+            row["mtimestamp"], "%d-%b-%Y"
+        ).date()
+
+        normalized.append(
+            {
+                "time": datetime.combine(
+                    trade_date, datetime.min.time()
+                ).replace(tzinfo=timezone.utc),
+                "symbol": ticker,
+                "open": float(row.get("chOpeningPrice", 0.0)),
+                "high": float(row.get("chTradeHighPrice", 0.0)),
+                "low": float(row.get("chTradeLowPrice", 0.0)),
+                "close": float(row.get("chClosingPrice", 0.0)),
+                "volume": int(row.get("chTotTradedQty", 0)),
+                "exchange": exchange,
+            }
+        )
+
+    return normalized
+
+
+# -----------------------------------------------------------
+# FETCH HISTORICAL DATA FOR A TICKER
+# -----------------------------------------------------------
+async def fetch_historical_data(ticker: str, start_date: date = None, end_date: date = None):
+    if (end_date - start_date).days > 60:
+        print("[ERROR] Date Range not allowed more than 60 days")
+        return {}
+
+    payload = {
+        "functionName":"getHistoricalTradeData",
+        "symbol":ticker,
+        'series':'EQ',
+        'fromDate':start_date.strftime('%d-%m-%Y'),
+        'toDate':end_date.strftime('%d-%m-%Y')
+    }
+    data = nse_session.get(url=API_URL,params=payload,proxies=PROXIES)
+    sleep(FETCH_COOLDOWN_TIME)
+    if data.status_code == 200:
+        print("[INFO] Data Fetched Successfully")
+        return data.json()
+    else:
+        print("[ERROR] Data Not Fetched")
+        return {}
+
+
+# -----------------------------------------------------------
 # LOAD HISTORICAL DATA FOR A TICKER
 # -----------------------------------------------------------
 async def load_historical_data(ticker: str, start_date: date = None, end_date: date = None):
@@ -119,17 +192,18 @@ async def load_historical_data(ticker: str, start_date: date = None, end_date: d
                     return
                 else:
                     print(f"[INFO] Found existing data from {earliest_date}, but will backfill to {start_date}")
+                    end_date=earliest_date
 
-        # Fetch historical data using NSE client (runs in executor since it's synchronous)
-        print(f"[INFO] Fetching historical data from NSE...")
-        historical_data = await loop.run_in_executor(
-            None,
-            nse.fetch_equity_historical_data,
-            ticker,
-            start_date,
-            end_date,
-            ["EQ"]
-        )
+        # Fetch historical data using NSE client (runs in executor since it's synchronous)        print(f"[INFO] Fetching historical data from NSE...")
+        # historical_data = await loop.run_in_executor(
+            # None,
+            # nse.fetch_equity_historical_data,
+            # ticker,
+            # start_date,
+            # end_date,
+            # ["EQ"]
+        # )
+        historical_data = await fetch_historical_data(ticker, start_date, end_date)
 
         if not historical_data or len(historical_data) == 0:
             print(f"[WARN] No historical data retrieved for {ticker}")
@@ -163,7 +237,7 @@ async def load_historical_data(ticker: str, start_date: date = None, end_date: d
         for item in historical_data:
             try:
                 # Parse the date from NSE format (typically "DD-MMM-YYYY")
-                date_str = item.get('CH_TIMESTAMP') or item.get('date') or item.get('DATE')
+                date_str = item.get('CH_TIMESTAMP') or item.get('date') or item.get('DATE') or item.get('mtimestamp')
 
                 if not date_str:
                     continue
@@ -185,11 +259,11 @@ async def load_historical_data(ticker: str, start_date: date = None, end_date: d
                 processed_batch.append({
                     'time': tick_time,
                     'symbol': ticker,
-                    'open': float(item.get('CH_OPENING_PRICE') or item.get('open') or item.get('OPEN') or 0),
-                    'high': float(item.get('CH_TRADE_HIGH_PRICE') or item.get('high') or item.get('HIGH') or 0),
-                    'low': float(item.get('CH_TRADE_LOW_PRICE') or item.get('low') or item.get('LOW') or 0),
-                    'close': float(item.get('CH_CLOSING_PRICE') or item.get('close') or item.get('CLOSE') or 0),
-                    'volume': int(item.get('CH_TOT_TRADED_QTY') or item.get('volume') or item.get('VOLUME') or 0),
+                    'open': float(item.get('CH_OPENING_PRICE') or float(item.get('chOpeningPrice')) or item.get('open') or item.get('OPEN') or 0),
+                    'high': float(item.get('CH_TRADE_HIGH_PRICE') or float(item.get('chTradeHighPrice')) or item.get('high') or item.get('HIGH') or 0),
+                    'low': float(item.get('CH_TRADE_LOW_PRICE') or float(item.get('chTradeLowPrice')) or item.get('low') or item.get('LOW') or 0),
+                    'close': float(item.get('CH_CLOSING_PRICE') or float(item.get('chClosingPrice')) or item.get('close') or item.get('CLOSE') or 0),
+                    'volume': int(item.get('CH_TOT_TRADED_QTY') or float(item.get('chTotTradedQty')) or item.get('volume') or item.get('VOLUME') or 0),
                     'exchange': 'NSE'
                 })
             except Exception as e:

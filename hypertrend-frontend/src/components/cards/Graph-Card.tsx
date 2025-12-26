@@ -14,7 +14,7 @@ type GraphCardProps = {
   high: string
   low: string
   synopsis?: string
-  data?: number[]
+  data: number[]
 }
 
 export function MiniSparkline({ data }: { data: number[] }) {

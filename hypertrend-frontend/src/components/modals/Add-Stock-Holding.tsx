@@ -250,7 +250,7 @@ export function AddHoldingModal({ open, onOpenChange }: AddHoldingModalProps) {
                 type="button"
                 onClick={() => setFormData({ ...formData, mystocks: true })}
                 className={`flex-1 rounded-md px-3 py-2 text-sm transition-all
-        ${formData.mystocks === true
+                    ${formData.mystocks === true
                     ? "bg-background shadow font-medium"
                     : "text-muted-foreground"
                   }`}
@@ -262,7 +262,7 @@ export function AddHoldingModal({ open, onOpenChange }: AddHoldingModalProps) {
                 type="button"
                 onClick={() => setFormData({ ...formData, mystocks: false })}
                 className={`flex-1 rounded-md px-3 py-2 text-sm transition-all
-        ${formData.mystocks === false
+                    ${formData.mystocks === false
                     ? "bg-background shadow font-medium"
                     : "text-muted-foreground"
                   }`}

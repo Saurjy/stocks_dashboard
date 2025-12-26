@@ -18,6 +18,7 @@ from shared import (
     nse,
     init_connections,
     close_connections,
+    load_companies
 )
 
 
@@ -175,7 +176,11 @@ async def store_company_symbols(query: str, results: list[dict]):
                                 json.dumps(comp_data.get("misc_data", {})),
                             )
                             print(f"{comp_row['symbol_info']} Company info Inserted")
-
+                            await conn.execute(
+                                f"""UPDATE user_requests SET is_checked=True where not is_checked and 
+                                LOWER(company) = LOWER('{comp_row["symbol_info"]}') OR 
+                                LOWER(symbol) = LOWER('{comp_row["symbol"]}') """
+                            )
 
 async def load_cached_symbols(query: str) -> list[dict]:
     sql = "SELECT symbol, last_checked_date FROM company_symbols WHERE query=$1;"
@@ -234,6 +239,7 @@ async def run_company_initializer(force: bool = False):
         force: If True, refresh all companies regardless of last check date
     """
     await init_connections()
+    await load_companies()
 
     try:
         all_symbols = []
